@@ -1,3 +1,4 @@
+update: use a throwaway if you plan to login instead of using cookies.
 ```bash
 follows.py USERNAMES... --username username --password password --save-cookies "/path/to/save/cookies/file.ext"
 ```
