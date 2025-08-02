@@ -14,21 +14,16 @@ from cookies import dict_from_cookies_txt
        stop=stop_after_attempt(6),
        wait=wait_fixed(60 * 15))
 async def get_friends(client, user, friends=None, count=0):
-    if count == 0:
-        try:
-            friends = await client.get_user_following(user.id, count=50)
-        except Exception as e:
-            print(f'[get_friends]: An error occurred:\n{e}')
-            raise e
-    if not friends:
-        return
-
-    for friend in friends:
-        yield friend
-    count += len(friends)
-    print(f'[get_friends]: got {count} friends in total...')
-
+    await asyncio.sleep(90)
     try:
+        if count == 0:
+            friends = await client.get_user_following(user.id, count=50)
+        if not friends:
+            return
+        for friend in friends:
+            yield friend
+        count += len(friends)
+        print(f'[get_friends]: got {count} friends in total...')
         async for friend in get_friends(None, None, await friends.next(), count):
             yield friend
     except Exception as e:

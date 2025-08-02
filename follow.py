@@ -13,6 +13,7 @@ from friends import get_friends
        stop=stop_after_attempt(6),
        wait=wait_fixed(60 * 15))
 async def follow_users(client, users):
+    await asyncio.sleep(60)
     while len(users) > 0:
         user = users[-1]
         try:
@@ -29,7 +30,6 @@ async def follow_users(client, users):
 
         print(f'[follow_users]: followed {user["screen_name"]}')
         users.pop()
-
 
 async def main():
     parser = argparse.ArgumentParser()
