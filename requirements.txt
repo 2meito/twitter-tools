@@ -1,1 +1,3 @@
 twikit
+tenacity
+requests

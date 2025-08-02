@@ -1,0 +1,61 @@
+import argparse
+import asyncio
+import datetime
+import json
+from pathlib import Path
+from twikit import Client, Forbidden, TooManyRequests
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
+
+from cookies import dict_from_cookies_txt
+
+
+@retry(retry=(retry_if_exception_type(TooManyRequests) |
+              retry_if_exception_type(Forbidden)),
+       stop=stop_after_attempt(6),
+       wait=wait_fixed(60 * 15))
+async def get_friends(client, user, friends=None, count=0):
+    if count == 0:
+        try:
+            friends = await client.get_user_following(user.id, count=50)
+        except Exception as e:
+            print(f'[get_friends]: An error occurred:\n{e}')
+            raise e
+    if not friends:
+        return
+
+    for friend in friends:
+        yield friend
+    count += len(friends)
+    print(f'[get_friends]: got {count} friends in total...')
+
+    try:
+        async for friend in get_friends(None, None, await friends.next(), count):
+            yield friend
+    except Exception as e:
+        print(f'[get_friends]: An error occurred:\n{e}')
+        raise e
+
+
+async def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('screen_names', nargs='+', type=str)
+    parser.add_argument('--cookies', required=True, type=str)
+    args = parser.parse_args()
+
+    client = Client('en-US', cookies=dict_from_cookies_txt(args.cookies))
+
+    Path('out').mkdir(parents=True, exist_ok=True)
+    users = [await client.get_user_by_screen_name(screen_name) for screen_name in args.screen_names]
+    for user in users:
+        friend_list = []
+        base_path = f'out/{user.screen_name}-{datetime.datetime.now().strftime("%Y%m%d.%H%M%S-%f")}'
+        with open(f'{base_path}.txt', 'w') as file:
+            async for friend in get_friends(client, user):
+                friend_list.append({'id': friend.id, 'screen_name': friend.screen_name, 'name': friend.name})
+                file.write(f'https://twitter.com/{friend.screen_name}\n')
+        with open(f'{base_path}.json', 'w') as file:
+            file.write(json.dumps(friend_list))
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

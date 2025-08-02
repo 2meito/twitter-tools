@@ -1,8 +1,9 @@
-update: use a throwaway if you plan to login instead of using cookies.
+### friends.py
 ```bash
-follows.py USERNAMES... --username username --password password --save-cookies "/path/to/save/cookies/file.ext"
+friends.py --cookies "/path/to/cookies.txt" SCREEN_NAMES... 
 ```
-OR
+
+### follow.py
 ```bash
-follows.py USERNAMES... --cookies "/path/to/cookies/file.ext" 
+follow.py --cookies "/path/to/cookies.txt" FRIENDS_JSON
 ```
