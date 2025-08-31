@@ -9,6 +9,9 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fi
 from cookies import dict_from_cookies_txt
 
 
+def user_to_dict(user):
+    return {'id': user.id, 'screen_name': user.screen_name, 'name': user.name}
+
 @retry(retry=(retry_if_exception_type(TooManyRequests) |
               retry_if_exception_type(Forbidden)),
        stop=stop_after_attempt(6),
@@ -46,7 +49,7 @@ async def main():
         base_path = f'out/{user.screen_name}-{datetime.datetime.now().strftime("%Y%m%d.%H%M%S-%f")}'
         with open(f'{base_path}.txt', 'w') as file:
             async for friend in get_friends(client, user):
-                friend_list.append({'id': friend.id, 'screen_name': friend.screen_name, 'name': friend.name})
+                friend_list.append(user_to_dict(friend))
                 file.write(f'https://twitter.com/{friend.screen_name}\n')
         with open(f'{base_path}.json', 'w') as file:
             file.write(json.dumps(friend_list))
